@@ -6,6 +6,7 @@ from app.database.redis_client import redis_client
 from app.database.models import User, RefreshToken
 from app.schema.auth_schema import RegisterRequest,LoginRequest,ForgotPasswordRequest,PasswordResetResponse,ResetPasswordRequest,ProfileUpdate
 from app.service.security import create_refresh_tokens, hash_password, verify_password,create_access_token
+from app.service.email_service import send_email
 from app.service.utils import utc_now
 
 def register_user(request: RegisterRequest, db: Session):
@@ -130,6 +131,38 @@ def forgot_password_user(
     )
 
     reset_link = f"http://localhost:4200/reset-password?token={token}"
+
+    mail_body = f"""
+    <html>
+    <body>
+        <p>Hello,</p>
+
+        <p>We received a request to reset the password for your
+        File Management System account.</p>
+
+        <p>Click the link below to reset your password:</p>
+
+        <p>
+        <a href="{reset_link}">Reset Password</a>
+        </p>
+
+        <p>This link is temporary and can only be used according to
+        its expiry and validity rules.</p>
+
+        <p>If you did not request a password reset, you can ignore
+        this email. Your password will remain unchanged.</p>
+
+        <p>Regards,<br>
+        File Management System Team</p>
+    </body>
+    </html>
+    """
+
+    send_email(
+        to_email=request.email,
+        subject="Password Reset Link",
+        body=mail_body
+    )
 
     print(reset_link)
 
