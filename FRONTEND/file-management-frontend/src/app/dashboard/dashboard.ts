@@ -91,6 +91,11 @@ export class Dashboard {
     });
   }
 
+  openProfile(){
+    sessionStorage.setItem('prevurl',this.router.url)
+    this.router.navigate(['/profile'])
+  }
+
   logout() {
 
     this.http.post(
@@ -112,6 +117,8 @@ export class Dashboard {
         localStorage.removeItem(
           'email'
         );
+
+        sessionStorage.removeItem('prevurl')
 
         this.router.navigate([
           '/login'

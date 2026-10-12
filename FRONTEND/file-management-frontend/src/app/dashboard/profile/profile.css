@@ -29,6 +29,25 @@
     font-size: 14px;
 }
 
+.back-button {
+    align-self: flex-start;
+    margin-left: max(calc((100% - 560px) / 2), 20px);
+    margin-bottom: 20px;
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background-color: var(--panel);
+    color: var(--fg);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+    background-color: var(--soft);
+}
+
 .profile-container {
     width: 100%;
     max-width: 560px;

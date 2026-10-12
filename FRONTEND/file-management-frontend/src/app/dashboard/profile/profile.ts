@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-profile',
@@ -29,7 +30,8 @@ export class Profile implements OnInit {
 
     constructor(
         private http: HttpClient,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private router: Router
     ) {}
 
     ngOnInit() {
@@ -127,13 +129,37 @@ export class Profile implements OnInit {
             return
         }
 
+    const firstName = this.firstName.trim().toLowerCase()
+    const lastName = this.lastName.trim().toLowerCase()
+    const email = this.email.trim().toLowerCase()
+
+    const originalFirstName = this.originalFirstName.trim().toLowerCase()
+    const originalLastName = this.originalLastName.trim().toLowerCase()
+    const originalEmail = this.originalEmail.trim().toLowerCase()
+
+    // Check whether anything has changed
+    if (
+        firstName === originalFirstName &&
+        lastName === originalLastName &&
+        email === originalEmail
+    ) {
+        this.isEditing = false
+
+        this.showMessagePopup(
+            'Profile updated successfully. No changes detected.',
+            'success'
+        )
+
+        return
+    }
+
         this.saving = true
         this.cdr.detectChanges()
 
         const request = {
-            first_name: this.firstName,
-            last_name: this.lastName,
-            email: this.email.toLowerCase()
+            first_name: this.firstName.trim(),
+            last_name: this.lastName.trim(),
+            email: this.email.trim().toLowerCase()
         }
 
         this.http.patch(
@@ -195,6 +221,32 @@ export class Profile implements OnInit {
 
         })
     }
+
+    goback(){
+
+        const returnUrl = sessionStorage.getItem('prevurl')
+
+        console.log('Saved URL:', returnUrl)
+
+        this.router.navigateByUrl(returnUrl!)
+
+        sessionStorage.removeItem('prevurl')
+
+        console.log('URL after removal:', sessionStorage.getItem('PrevUrl'));
+
+    }
+
+//     goback() {
+//     const returnUrl = sessionStorage.getItem('PrevUrl');
+
+//     console.log('Saved URL:', returnUrl);
+
+//     this.router.navigateByUrl(returnUrl!);
+
+//     sessionStorage.removeItem('PrevUrl');
+
+//     console.log('URL after removal:', sessionStorage.getItem('PrevUrl'));
+// }
 
     showMessagePopup(text: string, type: 'success' | 'error' = 'success') {
 

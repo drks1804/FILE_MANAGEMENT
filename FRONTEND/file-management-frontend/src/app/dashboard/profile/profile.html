@@ -1,4 +1,11 @@
 <div class="profile-page">
+    <button 
+        type="button"
+        class="back-button"
+        (click)="goback()"
+    >
+    ← Back
+</button>
 
     <div class="profile-header">
         <h1>Profile</h1>
@@ -62,18 +69,9 @@
                     <input
                         type="email"
                         [(ngModel)]="email"
-                        [disabled]="!isEditing"
+                        readonly
                         placeholder="Email"
                     >
-
-                    <button
-                        type="button"
-                        class="edit-button"
-                        (click)="enableEditing()"
-                        title="Edit email"
-                    >
-                        ✎
-                    </button>
                 </div>
             </div>
 
