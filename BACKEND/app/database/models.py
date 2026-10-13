@@ -46,6 +46,10 @@ class Upload(Base):
         String(50)
         )
     uploaded_size: Mapped[int]
+    s3_upload_id: Mapped[str | None] = mapped_column(
+    String(1024),
+    nullable=True
+    )
 
 class File(Base):
     __tablename__ = "files"

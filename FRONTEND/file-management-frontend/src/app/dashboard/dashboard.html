@@ -55,7 +55,7 @@
                 [routerLinkActiveOptions]="{ exact: true }"
             >
                 <span class="avatar">{{ firstName.charAt(0) }}</span>
-                <span class="profile-name">{{ firstName }}</span>
+                <span class="profile-name">{{ firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() }}</span>
             </button>
 
             <button
@@ -95,3 +95,102 @@
     }
 
 </div>
+
+@if (isUploading) {
+  <div class="active-upload-progress">
+    <div class="progress-header">
+      <span>{{ interruptedFileName }}</span>
+      <span>{{ interruptedProgress }}%</span>
+    </div>
+
+    <div class="progress-track">
+      <div
+        class="progress-fill"
+        [style.width.%]="interruptedProgress">
+      </div>
+    </div>
+
+    <p>Uploading file...</p>
+  </div>
+}
+
+<!-- Upload Interrupted Popup -->
+@if (uploadInterrupted) {
+  <div class="popup-overlay">
+    <div class="popup-card">
+      <h2>Upload stopped</h2>
+
+      <p class="interrupted-file-name">
+        {{ interruptedFileName }}
+      </p>
+
+      <p>
+        Your upload was interrupted, likely due to a dropped
+        connection or network issue.
+      </p>
+
+      <div class="upload-progress">
+        <div class="progress-label">
+          {{ interruptedProgress }}%
+        </div>
+
+        <div class="progress-track">
+          <div
+            class="progress-fill"
+            [style.width.%]="interruptedProgress">
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-actions">
+        <button
+          type="button"
+          class="retry-button"
+          (click)="retryInterruptedUpload()">
+          Retry
+        </button>
+
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="cancelInterruptedUpload()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Different File Confirmation Popup -->
+@if (differentFilePopup) {
+  <div class="popup-overlay">
+    <div class="popup-card">
+      <h2>Different File Selected</h2>
+
+      <p class="file-warning">
+        The interrupted file
+        <strong>{{ interruptedFileName }}</strong>
+        will be deleted and replaced with the newly selected file
+        <strong>{{ selectedFileName }}</strong>
+        if you continue.
+      </p>
+
+      <div class="popup-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="chooseCorrectFile()">
+          Choose Correct File
+        </button>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="continueWithNewFile()"
+          >
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+}

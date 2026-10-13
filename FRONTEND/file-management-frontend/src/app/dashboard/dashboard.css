@@ -184,6 +184,197 @@
     color: var(--bad);
 }
 
+
+/* Popup background overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Popup card */
+.popup-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  animation: popup-appear 0.2s ease-out;
+}
+
+/* Popup heading */
+.popup-card h2 {
+  margin: 0 0 18px;
+  color: var(--fg);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* General paragraph text */
+.popup-card p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+
+/* Interrupted filename */
+.popup-card .interrupted-file-name {
+  color: var(--fg);
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Progress section */
+.upload-progress {
+  margin-top: 24px;
+}
+
+/* Percentage label */
+.progress-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+/* Progress bar background */
+.progress-track {
+  width: 100%;
+  height: 9px;
+  background: var(--soft);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Actual uploaded progress */
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2176ff, #5b4cff);
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+/* Button container */
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Common button styles */
+.popup-actions button {
+  min-width: 100px;
+  padding: 11px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.popup-actions button:hover {
+  transform: translateY(-1px);
+}
+
+/* Retry button */
+.retry-button {
+  background: linear-gradient(to right, #2176ff, #5b4cff);
+  color: #ffffff;
+  border: none;
+}
+
+.retry-button:hover {
+  filter: brightness(1.1);
+}
+
+/* Cancel button */
+.cancel-button {
+  background: var(--soft);
+  color: var(--fg);
+  border: 1px solid var(--line);
+}
+
+.cancel-button:hover {
+  background: var(--hover);
+}
+
+/* Keyboard focus */
+.popup-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.file-warning {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 18px 0;
+  overflow-wrap: anywhere;
+}
+
+.file-warning strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+
+/* Popup entrance animation */
+@keyframes popup-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .popup-card {
+    padding: 22px;
+  }
+
+  .popup-card h2 {
+    font-size: 21px;
+  }
+
+  .popup-actions {
+    flex-direction: column-reverse;
+  }
+
+  .popup-actions button {
+    width: 100%;
+  }
+}
+
+
 @keyframes messageFade {
     from {
         opacity: 0;
@@ -194,4 +385,51 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.active-upload-progress {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 450px;
+  padding: 16px;
+
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+
+  z-index: 1200;
+}
+
+.active-upload-progress .progress-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.active-upload-progress .progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.active-upload-progress .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2176ff, #5b4cff);
+  transition: width 0.2s ease;
+}
+
+.active-upload-progress p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
