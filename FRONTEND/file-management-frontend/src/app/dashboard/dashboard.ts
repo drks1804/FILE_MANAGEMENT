@@ -186,6 +186,7 @@ export class Dashboard implements OnInit {
         this.selectedFile = selectedFile;
         this.selectedFileName = selectedFile.name;
         this.differentFilePopup = true;
+        this.cdr.detectChanges
         return;
       }
 
@@ -404,6 +405,7 @@ export class Dashboard implements OnInit {
         this.selectedFile = file;
         this.selectedFileName = file.name;
         this.differentFilePopup = true;
+        this.cdr.detectChanges()
         return;
       }
 

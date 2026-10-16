@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from app.database.database import Base, engine
-from app.database import models
 from contextlib import asynccontextmanager
 from app.service.faiss_index import load_index
 from app.routes.auth import router as auth_router
