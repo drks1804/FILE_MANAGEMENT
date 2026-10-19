@@ -10,8 +10,9 @@
                 class="upload-button"
                 type="button"
                 (click)="fileInput.click()"
+                [disabled]="isUploading"
             >
-                Upload File
+                {{isUploading? 'Uploading':'Upload'}}
             </button>
 
             <input
