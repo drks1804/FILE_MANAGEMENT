@@ -1,9 +1,30 @@
-
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: file-management-mysql
+    environment:
+      MYSQL_DATABASE: file_management
+      MYSQL_USER: file_app
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   backend:
     build:
       context: ./BACKEND
-    image: file-management-backend
+    image: file-management-backend:latest
     container_name: file-management-backend-container
     env_file:
       - .env
@@ -12,6 +33,8 @@ services:
     volumes:
       - faiss_storage:/app/storage
     depends_on:
+      mysql:
+        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
@@ -29,7 +52,7 @@ services:
   frontend:
     build:
       context: ./FRONTEND/file-management-frontend
-    image: file-management-frontend
+    image: file-management-frontend:latest
     container_name: file-management-frontend-container
     ports:
       - "4200:80"
@@ -51,7 +74,7 @@ services:
       start_period: 10s
 
   redis:
-    image: redis
+    image: redis:latest
     container_name: FileManagement-redis
     ports:
       - "6379:6379"
@@ -66,3 +89,4 @@ services:
 volumes:
   faiss_storage:
     external: true
+  mysql_data:

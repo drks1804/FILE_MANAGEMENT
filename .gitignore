@@ -47,3 +47,16 @@ logs/
 Thumbs.db
 desktop.ini
 backend.env
+
+# Backend environment files
+backend.env
+BACKEND/.env
+BACKEND/.env.*
+
+# Frontend environment files
+FRONTEND/.env
+FRONTEND/.env.*
+
+# Private keys and certificates
+*.pem
+*.key
