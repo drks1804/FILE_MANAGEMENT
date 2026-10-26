@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 interface PasswordResetResponse {
   message: string;
@@ -58,7 +59,7 @@ export class ResetPassword {
 
   validateToken() {
     this.http.get<PasswordResetResponse>(
-      'http://127.0.0.1:8000/auth/reset-password/validate',
+      `${environment.apiUrl}/auth/reset-password/validate`,
       {
         params: {
           token: this.token
@@ -109,7 +110,7 @@ export class ResetPassword {
     this.cdr.detectChanges()
 
     this.http.post<PasswordResetResponse>(
-      'http://127.0.0.1:8000/auth/reset-password',
+      `${environment.apiUrl}/auth/reset-password`,
       {
         token: this.token,
         new_password: this.new_password,

@@ -4,6 +4,7 @@ import { DatePipe,CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { FilesStore, File } from '../files-store';
+import { environment } from '../../../environments/environment';
 
 interface ShareLink {
   share_id: number;
@@ -199,7 +200,7 @@ export class MyFiles implements OnInit {
   getFiles() {
 
     this.http.get<File[]>(
-      'http://localhost:8000/files'
+      `${environment.apiUrl}/files`
     ).subscribe({
 
       next: response => {
@@ -252,7 +253,7 @@ export class MyFiles implements OnInit {
     }
 
     this.http.get<File[]>(
-      'http://localhost:8000/search/query',
+      `${environment.apiUrl}/search/query`,
       {
         params: {
           query: this.searchText
@@ -311,7 +312,7 @@ export class MyFiles implements OnInit {
   toggleFavorite(file: File) {
 
     this.http.patch<FavoriteResponse>(
-      `http://localhost:8000/files/${file.file_id}/favorite`,
+      `${environment.apiUrl}/files/${file.file_id}/favorite`,
       {}
     ).subscribe({
 
@@ -358,7 +359,7 @@ export class MyFiles implements OnInit {
   ViewFile(file: File) {
 
     this.http.get(
-      `http://localhost:8000/files/${file.file_id}/view`,
+      `${environment.apiUrl}/files/${file.file_id}/view`,
       {
         responseType: 'blob'
       }
@@ -463,7 +464,7 @@ export class MyFiles implements OnInit {
   download(file: File) {
 
     this.http.get(
-      `http://localhost:8000/files/${file.file_id}/view`,
+      `${environment.apiUrl}/files/${file.file_id}/view`,
       {
         responseType: 'blob'
       }
@@ -535,7 +536,7 @@ export class MyFiles implements OnInit {
     };
 
     this.http.patch(
-      `http://localhost:8000/files/${this.selectedRenameFile.file_id}/rename`,
+      `${environment.apiUrl}/files/${this.selectedRenameFile.file_id}/rename`,
       request
     ).subscribe({
 
@@ -601,7 +602,7 @@ export class MyFiles implements OnInit {
     const filename = this.selectedDeleteFile.file_name;
 
     this.http.delete(
-      `http://localhost:8000/files/${fileId}/delete`
+      `${environment.apiUrl}/files/${fileId}/delete`
     ).subscribe({
 
       next: response => {
@@ -656,7 +657,7 @@ export class MyFiles implements OnInit {
       localStorage.getItem('email')?.toLowerCase() || '';
 
     this.http.get<ShareLink[]>(
-      'http://localhost:8000/share'
+      `${environment.apiUrl}/share`
     ).subscribe({
 
       next: response => {
@@ -816,7 +817,7 @@ export class MyFiles implements OnInit {
     }
 
     const shareLink =
-      `http://localhost:4200/share/${this.selectedShareToken}`;
+      `${window.location.origin}/share/${this.selectedShareToken}`;
 
     navigator.clipboard
       .writeText(shareLink)
@@ -886,7 +887,7 @@ export class MyFiles implements OnInit {
     const filename = this.selectedFile?.file_name;
 
     this.http.patch(
-      `http://localhost:8000/share/${shareId}/change`,
+      `${environment.apiUrl}/share/${shareId}/change`,
       request
     ).subscribe({
 
@@ -942,7 +943,7 @@ export class MyFiles implements OnInit {
     const filename = this.selectedFile.file_name;
 
     this.http.post<{ share_link: string }>(
-      `http://localhost:8000/share/${fileId}`,
+      `${environment.apiUrl}/share/${fileId}`,
       request
     ).subscribe({
 

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../auth';
+import { environment } from '../../../environments/environment';
 
 interface LoginResponse {
   user_id: number;
@@ -65,7 +66,7 @@ export class Login {
     this.cdr.detectChanges()
 
     this.http.post<LoginResponse>(
-      'http://localhost:8000/auth/login',
+      `${environment.apiUrl}/auth/login`,
       {
         email: this.email,
         password: this.password

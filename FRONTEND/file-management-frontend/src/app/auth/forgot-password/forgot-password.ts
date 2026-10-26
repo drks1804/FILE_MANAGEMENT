@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 interface forgot_password_response {
   message: string
@@ -49,7 +50,7 @@ export class ForgotPassword {
     this.cdr.detectChanges()
 
     this.http.post<forgot_password_response>(
-      'http://127.0.0.1:8000/auth/forgot-password',
+      `${environment.apiUrl}/auth/forgot-password`,
       {
         email: this.email
       }

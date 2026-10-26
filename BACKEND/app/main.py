@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 async def lifespan(app:FastAPI):
     load_index()
 
+    delete_expired_refresh_tokens()
     scheduler = BackgroundScheduler()
 
     scheduler.add_job(
@@ -30,9 +31,12 @@ async def lifespan(app:FastAPI):
     finally:
         scheduler.shutdown()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, docs_url=None,redoc_url=None, openapi_url=None)
 
-delete_expired_refresh_tokens()
+@app.get("/health")
+def health():
+    return {"status":"ok"}
+
 
 app.add_middleware(
     CORSMiddleware,

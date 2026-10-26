@@ -1,5 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+import os
+from dotenv import load_dotenv
 from datetime import timedelta
 import secrets
 from app.database.redis_client import redis_client
@@ -8,6 +10,9 @@ from app.schema.auth_schema import RegisterRequest,LoginRequest,ForgotPasswordRe
 from app.service.security import create_refresh_tokens, hash_password, verify_password,create_access_token
 from app.service.email_service import send_email
 from app.service.utils import utc_now
+
+load_dotenv()
+
 
 def register_user(request: RegisterRequest, db: Session):
 
@@ -130,7 +135,9 @@ def forgot_password_user(
         ex = 300
     )
 
-    reset_link = f"http://localhost:4200/reset-password?token={token}"
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:4200").rstrip("/")
+
+    reset_link = f"{frontend_url}/reset-password?token={token}"
 
     mail_body = f"""
     <html>
@@ -163,8 +170,6 @@ def forgot_password_user(
         subject="Password Reset Link",
         body=mail_body
     )
-
-    print(reset_link)
 
     return PasswordResetResponse(
         message=reset_link

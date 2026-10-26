@@ -172,11 +172,11 @@ uvicorn app.main:app --reload
 
 The backend will be available at:
 
-http://localhost:8000
+${environment.apiUrl}
 
 FastAPI API documentation:
 
-http://localhost:8000/docs
+${environment.apiUrl}/docs
 
 Frontend Setup
 

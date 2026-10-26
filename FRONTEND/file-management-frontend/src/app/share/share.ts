@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../auth/auth';
-
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-share',
@@ -43,7 +43,7 @@ export class Share implements OnInit {
   validateToken() {
 
     this.http.get(
-      'http://localhost:8000/share/sharelink/validate',
+      `${environment.apiUrl}/share/sharelink/validate`,
       {
         params: {
           token: this.token
@@ -122,7 +122,7 @@ export class Share implements OnInit {
     }
 
     this.http.get(
-      `http://localhost:8000/share/${this.token}`,
+      `${environment.apiUrl}/share/${this.token}`,
       {
         responseType: 'blob'
       }

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,7 @@ export class AuthService {
   refreshAccessToken(): Observable<{ access_token: string }> {
 
     return this.http.post<{ access_token: string }>(
-      'http://localhost:8000/auth/refresh',
+      `${environment.apiUrl}/auth/refresh`,
       {},
       {
         withCredentials: true

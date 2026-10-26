@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-profile',
@@ -68,7 +69,7 @@ export class Profile implements OnInit {
     getProfile() {
 
         this.http.get<any>(
-            'http://localhost:8000/auth/profile'
+            `${environment.apiUrl}/auth/profile`
         ).subscribe({
 
             next: response => {
@@ -163,7 +164,7 @@ export class Profile implements OnInit {
         }
 
         this.http.patch(
-            'http://localhost:8000/auth/profile',
+            `${environment.apiUrl}/auth/profile`,
             request
         ).subscribe({
 

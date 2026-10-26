@@ -1,26 +1,5 @@
-services:
-  mysql:
-    image: mysql:8.0
-    container_name: file-management-mysql
-    environment:
-      MYSQL_DATABASE: file_management
-      MYSQL_USER: file_app
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "127.0.0.1:3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    restart: unless-stopped
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
 
+services:
   backend:
     build:
       context: ./BACKEND
@@ -28,22 +7,15 @@ services:
     container_name: file-management-backend-container
     env_file:
       - .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - faiss_storage:/app/storage
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    expose:
+      - "8000"
     restart: unless-stopped
     healthcheck:
       test:
         - CMD
         - python
         - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=3)"
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
       interval: 10s
       timeout: 5s
       retries: 5
@@ -55,7 +27,7 @@ services:
     image: file-management-frontend:latest
     container_name: file-management-frontend-container
     ports:
-      - "4200:80"
+      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -72,21 +44,4 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
-  redis:
-    image: redis:latest
-    container_name: FileManagement-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-
-volumes:
-  faiss_storage:
-    external: true
-  mysql_data:
+      

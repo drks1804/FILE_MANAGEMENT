@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DatePipe,CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
 
 interface ShareLink {
   share_id: number;
@@ -86,7 +87,7 @@ export class ShareLinks implements OnInit {
   get_all_shares() {
 
     this.http.get<ShareLink[]>(
-      'http://localhost:8000/share'
+      `${environment.apiUrl}/share`
     ).subscribe({
 
       next: response => {
@@ -111,7 +112,7 @@ export class ShareLinks implements OnInit {
   ViewFile(share: ShareLink) {
 
     this.http.get(
-      `http://localhost:8000/files/${share.file_id}/view`,
+      `${environment.apiUrl}/files/${share.file_id}/view`,
       {
         responseType: 'blob'
       }
@@ -166,7 +167,7 @@ export class ShareLinks implements OnInit {
       this.SelectedShareLink.file_name;
 
     this.http.delete(
-      `http://localhost:8000/share/${sharelinkid}/revoke`
+      `${environment.apiUrl}/share/${sharelinkid}/revoke`
     ).subscribe({
 
       next: response => {
@@ -366,7 +367,7 @@ export class ShareLinks implements OnInit {
   copyShareLink(share: ShareLink) {
 
     const sharelink =
-      `http://localhost:4200/share/${share.share_token}`;
+      `${window.location.origin}/share/${share.share_token}`;
 
     navigator.clipboard.writeText(sharelink);
 
@@ -402,7 +403,7 @@ export class ShareLinks implements OnInit {
       this.SelectedShareLink.file_name;
 
     this.http.patch(
-      `http://localhost:8000/share/${this.SelectedShareLink.share_id}/change`,
+      `${environment.apiUrl}/share/${this.SelectedShareLink.share_id}/change`,
       request
     ).subscribe({
 

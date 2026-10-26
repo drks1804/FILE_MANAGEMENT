@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from "@angular/forms";
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 interface RegisterResponse {
     user_id: number;
@@ -113,7 +114,7 @@ export class Register {
     this.cdr.detectChanges()
 
     this.http.post<RegisterResponse>(
-      'http://127.0.0.1:8000/auth/register',
+      `${environment.apiUrl}/auth/register`,
       {
         first_name: this.first_name,
         last_name: this.last_name,

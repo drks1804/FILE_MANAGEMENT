@@ -3,6 +3,7 @@ import { HttpInterceptorFn, HttpClient } from '@angular/common/http';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from './auth';
+import { environment } from '../../environments/environment';
 
 let isRefreshing = false;
 
@@ -88,7 +89,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
             return http.post<{ access_token: string }>(
 
-                'http://localhost:8000/auth/refresh',
+                `${environment.apiUrl}/auth/refresh`,
 
                 {},
 

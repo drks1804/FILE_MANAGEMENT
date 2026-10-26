@@ -8,6 +8,7 @@ import {
 } from '@angular/router';
 import { MyFiles } from './my-files/my-files';
 import { AuthService } from '../auth/auth';
+import { environment } from '../../environments/environment';
 
 interface UploadInitResponse {
   file_id: number;
@@ -89,7 +90,7 @@ export class Dashboard implements OnInit {
 
   getIncompleteUploads(): void {
     this.http.get<IncompleteUpload[]>(
-      'http://localhost:8000/files/incomplete'
+      `${environment.apiUrl}/files/incomplete`
     ).subscribe({
       next: (response) => {
         this.incompleteUploads = response;
@@ -238,7 +239,7 @@ export class Dashboard implements OnInit {
     );
 
     return this.http.post(
-      `http://localhost:8000/files/${fileId}/parts?part_number=${partNumber}`,
+      `${environment.apiUrl}/files/${fileId}/parts?part_number=${partNumber}`,
       formdata
     );
   }
@@ -382,7 +383,7 @@ export class Dashboard implements OnInit {
 
   getUploadedParts(fileId: number) {
     return this.http.get<UploadedPartsResponse>(
-      `http://localhost:8000/files/${fileId}/parts`
+      `${environment.apiUrl}/files/${fileId}/parts`
     );
   }
 
@@ -429,7 +430,7 @@ export class Dashboard implements OnInit {
     const fileId = this.interruptedFileId;
 
     this.http.delete(
-      `http://localhost:8000/files/${fileId}/cancel`
+      `${environment.apiUrl}/files/${fileId}/cancel`
     ).subscribe({
       next: (response) => {
         console.log('Upload cancelled:', response);
@@ -479,7 +480,7 @@ export class Dashboard implements OnInit {
     // Delete the interrupted upload first. Only upload the new file if
     // the backend confirms that cleanup succeeded.
     this.http.delete(
-      `http://localhost:8000/files/${fileId}/cancel`
+      `${environment.apiUrl}/files/${fileId}/cancel`
     ).subscribe({
       next: () => {
         this.differentFilePopup = false;
@@ -525,7 +526,7 @@ export class Dashboard implements OnInit {
     };
 
     this.http.post<UploadInitResponse>(
-      'http://localhost:8000/files/upload',
+      `${environment.apiUrl}/files/upload`,
       uploadData
     ).subscribe({
       next: (response) => {
@@ -550,7 +551,7 @@ export class Dashboard implements OnInit {
     input: HTMLInputElement
   ): void {
     this.http.post(
-      `http://localhost:8000/files/${fileId}/complete`,
+      `${environment.apiUrl}/files/${fileId}/complete`,
       {}
     ).subscribe({
       next: (response) => {
@@ -605,7 +606,7 @@ export class Dashboard implements OnInit {
 
   logout(): void {
     this.http.post(
-      'http://localhost:8000/auth/logout',
+      `${environment.apiUrl}/auth/logout`,
       {},
       {
         withCredentials: true
