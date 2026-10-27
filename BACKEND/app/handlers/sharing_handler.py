@@ -6,6 +6,11 @@ from app.service.utils import utc_now
 from app.database.models import Sharelink, Permission, File, User
 from app.schema.sharing_schema import ShareRequest, ShareChange
 from app.service.s3_operations import get_file_from_s3
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:4200").rstrip("/")
 
 
 def create_share_handler(
@@ -126,7 +131,7 @@ def create_share_handler(
     db.commit()
 
     share_link = (
-        f"http://localhost:4200/share/{share_token}"
+        f"{frontend_url}/share/{share_token}"
     )
 
     return {
