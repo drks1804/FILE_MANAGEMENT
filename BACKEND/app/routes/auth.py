@@ -60,7 +60,7 @@ def login(
         secure=False, 
         samesite="lax",
         max_age=7 * 24 * 60 * 60,
-        path = "/auth"
+        path = "/api/auth"
     )
 
     return LoginResponse(
@@ -176,7 +176,7 @@ def refresh(
             secure=False,
             samesite="lax",
             max_age=7 * 24 * 60 * 60,
-            path="/auth"
+            path="/api/auth"
         )
 
         return {
@@ -210,7 +210,7 @@ def logout(
         if not refresh_token:
             response.delete_cookie(
                 key="refresh_token",
-                path="/auth"
+                path="/api/auth"
             )
 
             return {
@@ -237,7 +237,7 @@ def logout(
 
         response.delete_cookie(
             key="refresh_token",
-            path="/auth"
+            path="/api/auth"
         )
 
         return {
