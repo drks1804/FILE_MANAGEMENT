@@ -708,6 +708,8 @@ export class MyFiles implements OnInit {
 
     this.showSharePopup = false;
 
+    this.cdr.detectChanges();
+
     this.selectedFile = null;
 
     this.shareEmails = [];
@@ -726,7 +728,6 @@ export class MyFiles implements OnInit {
 
     this.selectedShareOwnerEmail = '';
 
-    this.cdr.detectChanges();
   }
 
   addSharePermission() {
