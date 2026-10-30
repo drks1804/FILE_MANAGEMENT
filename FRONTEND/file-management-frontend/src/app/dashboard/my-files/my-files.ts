@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { FilesStore, File } from '../files-store';
 import { environment } from '../../../environments/environment';
+import { Subscription, timeout } from 'rxjs';
 
 interface ShareLink {
   share_id: number;
@@ -45,6 +46,13 @@ export class MyFiles implements OnInit {
   searching = false
   lastSearchQuery = ''
   searchError = false
+
+  // ids and basic data returned by the last content search (kept apart from the file list)
+  searchResults: File[] = [];
+
+  // requests that can still be running; cancelled when a new one starts
+  private searchSub: Subscription | null = null;
+  private filesSub: Subscription | null = null;
 
   showSharePopup = false;
   selectedFile: File | null = null;
@@ -94,11 +102,6 @@ export class MyFiles implements OnInit {
       this.showOnlyFavorites = true;
     }
 
-    if (this.store.loaded) {
-      this.cdr.detectChanges();
-      return;
-    }
-
     this.getFiles();
   }
 
@@ -108,7 +111,26 @@ export class MyFiles implements OnInit {
 
   get visibleFiles(): File[] {
 
-    let result = this.files;
+    let result: File[];
+
+    if (this.showingContentResults) {
+
+      // content search: use the full row from the loaded file list (it has is_favorite etc.),
+      // and fall back to what the search returned (for example files shared with this user)
+      const known = new Map<number, File>(
+        (this.files ?? []).filter(file => !!file).map(file => [file.file_id, file])
+      );
+
+      result = this.searchResults.map(found => known.get(found.file_id) ?? found);
+
+    } else {
+
+      result = this.files ?? [];
+
+    }
+
+    // ignore malformed items so one bad entry cannot break the whole table
+    result = result.filter(file => !!file && file.file_id != null);
 
     if (this.showOnlyFavorites) {
 
@@ -122,7 +144,7 @@ export class MyFiles implements OnInit {
 
       result = result.filter(file => {
 
-        const name = file.file_name.toLowerCase();
+        const name = (file.file_name ?? '').toLowerCase();
 
         return terms.every(term => name.includes(term));
 
@@ -134,7 +156,19 @@ export class MyFiles implements OnInit {
 
   }
 
+  private cancelSearch() {
+
+    this.searchSub?.unsubscribe();
+
+    this.searchSub = null;
+
+    this.searching = false;
+
+  }
+
   onSearchTypeChange(type: string) {
+
+    this.cancelSearch();
 
     this.searchType = type;
 
@@ -179,9 +213,9 @@ export class MyFiles implements OnInit {
     ).toISOString();
   }
 
-  getFileTypeInfo(fileType: string): { label: string; class: string } {
+  getFileTypeInfo(fileType: string | null | undefined): { label: string; class: string } {
 
-  const type = fileType.toLowerCase();
+  const type = (fileType ?? '').toLowerCase();
 
   if (type.includes('pdf')) return { label: 'PDF', class: 'type-pdf' };
   if (type.includes('word')) return { label: 'DOC', class: 'type-doc' };
@@ -201,14 +235,16 @@ export class MyFiles implements OnInit {
   if (type.startsWith('video/')) return { label: 'VIDEO', class: 'type-default' };
   if (type.startsWith('audio/')) return { label: 'AUDIO', class: 'type-default' };
 
-  const subtype = (type.split('/')[1] || type).toUpperCase().slice(0, 5);
+  const subtype = (type.split('/')[1] || type || 'file').toUpperCase().slice(0, 5);
 
   return { label: subtype, class: 'type-default' };
  }
 
   getFiles() {
 
-    this.http.get<File[]>(
+    this.filesSub?.unsubscribe();
+
+    this.filesSub = this.http.get<File[]>(
       `${environment.apiUrl}/files`
     ).subscribe({
 
@@ -238,11 +274,20 @@ export class MyFiles implements OnInit {
 
   searchTextChanged() {
 
-    if (this.searchText.trim() === '' && (this.showingContentResults || this.searchError)) {
+    if (this.searchText.trim() !== '') {
+
+      return;
+
+    }
+
+    // the box was emptied: stop any search that is still running
+    this.cancelSearch();
+
+    if (this.showingContentResults || this.searchError) {
 
       this.showingContentResults = false;
 
-      this.searchError =false 
+      this.searchError = false;
 
       this.getFiles();
 
@@ -252,49 +297,62 @@ export class MyFiles implements OnInit {
 
   searchFiles() {
 
+    // TEMP: remove this line once the "search does not call the API" bug is confirmed fixed
+    console.log('searchFiles called', { type: this.searchType, text: this.searchText, searching: this.searching });
+
     if (this.searchType === 'filename') {
 
       return;
 
     }
 
+    // a new search always replaces one that is still running, so it can never be ignored
+    this.cancelSearch();
+
     if (this.searchText.trim() === '') {
 
-      this.searchError = false
+      this.searchError = false;
 
       this.getFiles();
 
       return;
     }
 
-    if (this.searching){
-      return
-    }
-    
-    this.searching = true
+    const query = this.searchText.trim();
 
-    this.searchError = false
+    // the search also replaces a file-list reload that is still running
+    this.filesSub?.unsubscribe();
 
-    this.cdr.detectChanges()
+    this.searching = true;
 
-    this.http.get<File[]>(
+    this.searchError = false;
+
+    this.cdr.detectChanges();
+
+    this.searchSub = this.http.get<File[]>(
       `${environment.apiUrl}/search/query`,
       {
         params: {
-          query: this.searchText
+          query
         }
       }
+    ).pipe(
+      timeout(20000)
     ).subscribe({
 
       next: response => {
 
-        this.files = response;
+        console.log(response);
 
-        this.lastSearchQuery = this.searchText.trim()
+        this.searchResults = Array.isArray(response) ? response : [];
+
+        this.lastSearchQuery = query;
 
         this.showingContentResults = true;
 
-        this.searching = false
+        this.searching = false;
+
+        this.searchSub = null;
 
         this.cdr.detectChanges();
 
@@ -305,6 +363,8 @@ export class MyFiles implements OnInit {
         console.log(error);
 
         this.searching = false;
+
+        this.searchSub = null;
 
         this.searchError = true;
 
@@ -317,6 +377,8 @@ export class MyFiles implements OnInit {
   }
 
   formatFileSize(size: number): string {
+
+    size = Number(size) || 0;
 
     if (size < 1024) {
 
@@ -584,6 +646,14 @@ export class MyFiles implements OnInit {
           return file;
         });
 
+        this.searchResults.forEach(file => {
+
+          if (file.file_id === this.selectedRenameFile?.file_id) {
+
+            file.file_name = this.newFileName;
+          }
+        });
+
         this.closeRenamePopup();
 
         this.showMessagePopup(
@@ -638,6 +708,10 @@ export class MyFiles implements OnInit {
       next: response => {
 
         this.files = this.files.filter(
+          file => file.file_id !== fileId
+        );
+
+        this.searchResults = this.searchResults.filter(
           file => file.file_id !== fileId
         );
 
