@@ -69,7 +69,7 @@ export class ForgotPassword {
         }
 
         if (error.status === 404) {
-          this.showError('User not registered')
+          this.showError(' User not registered ')
           return
         }
 

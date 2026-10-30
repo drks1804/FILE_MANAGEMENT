@@ -110,7 +110,7 @@ def forgot_password_user(
     if not existing_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not registered"
+            detail=" User not registered "
         )
 
     token = secrets.token_urlsafe(16)
