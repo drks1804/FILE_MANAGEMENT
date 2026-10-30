@@ -1,0 +1,298 @@
+
+name: Deploy File Management System
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+# Prevent two deployments from running simultaneously.
+concurrency:
+  group: file-management-ec2-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      # 1. Download repository source code.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Detect which application changed.
+      - name: Detect changed application
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'FRONTEND/file-management-frontend/**'
+            backend:
+              - 'BACKEND/**'
+
+      # 3. Configure SSH connection to EC2.
+      - name: Configure SSH
+        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.backend == 'true'
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      # 4. Build and transfer frontend image.
+      - name: Build and transfer frontend
+        if: steps.changes.outputs.frontend == 'true'
+        run: |
+          set -euo pipefail
+
+          docker build \
+            -t "file-management-frontend:$IMAGE_TAG" \
+            ./FRONTEND/file-management-frontend
+
+          docker save "file-management-frontend:$IMAGE_TAG" | gzip -1 | \
+            ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
+            "gunzip | sudo docker load"
+
+      # 5. Deploy frontend and verify health.
+      - name: Deploy frontend
+        if: steps.changes.outputs.frontend == 'true'
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
+            "bash -s -- frontend '$IMAGE_TAG'" <<'REMOTE'
+
+          set -uo pipefail
+
+          SERVICE="$1"
+          DEPLOY_TAG="$2"
+
+          REPO="file-management-frontend"
+          CONTAINER="file-management-frontend-container"
+          TAG_VAR="FRONTEND_IMAGE_TAG"
+
+          cd ~/FILE_MANAGEMENT
+
+          ROLLBACK_TAG="rollback-$DEPLOY_TAG"
+          ROLLBACK_IMAGE="$REPO:$ROLLBACK_TAG"
+
+          echo "Getting previous frontend image..."
+
+          OLD_IMAGE_ID=$(sudo docker inspect \
+            --format='{{.Image}}' "$CONTAINER")
+
+          if [ -z "$OLD_IMAGE_ID" ]; then
+            echo "Could not find previous frontend image."
+            exit 1
+          fi
+
+          sudo docker image tag "$OLD_IMAGE_ID" "$ROLLBACK_IMAGE"
+
+          echo "Deploying frontend version: $DEPLOY_TAG"
+
+          if ! sudo env "$TAG_VAR=$DEPLOY_TAG" \
+            docker compose up -d --no-deps "$SERVICE"; then
+            echo "Frontend deployment command failed."
+            DEPLOY_FAILED=1
+          else
+            DEPLOY_FAILED=0
+          fi
+
+          wait_for_health() {
+            for i in $(seq 1 36); do
+              STATUS=$(sudo docker inspect \
+                --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || true)
+
+              if [ "$STATUS" = "healthy" ]; then
+                return 0
+              fi
+
+              if [ "$STATUS" = "unhealthy" ]; then
+                return 1
+              fi
+
+              sleep 5
+            done
+
+            return 1
+          }
+
+          if [ "$DEPLOY_FAILED" -eq 0 ]; then
+            if wait_for_health; then
+              echo "Frontend deployment successful."
+            else
+              DEPLOY_FAILED=1
+              echo "Frontend health check failed."
+            fi
+          fi
+
+          # Restore previous image if deployment failed.
+          if [ "$DEPLOY_FAILED" -eq 1 ]; then
+            echo "Rolling back frontend..."
+
+            if sudo env "$TAG_VAR=$ROLLBACK_TAG" \
+              docker compose up -d --no-deps "$SERVICE" &&
+              wait_for_health; then
+
+              echo "Frontend rollback successful."
+            else
+              echo "Frontend rollback failed. Manual inspection required."
+            fi
+
+            sudo docker logs --tail 100 "$CONTAINER" || true
+            exit 1
+          fi
+
+          # Remove old frontend image tags after successful deployment.
+          echo "Cleaning old frontend images..."
+
+          while IFS= read -r IMAGE; do
+            case "$IMAGE" in
+              "$REPO:"*)
+                if [ "$IMAGE" != "$REPO:$DEPLOY_TAG" ]; then
+                  sudo docker image rm "$IMAGE" || true
+                fi
+                ;;
+            esac
+          done < <(sudo docker images --format '{{.Repository}}:{{.Tag}}')
+
+          echo "Frontend image cleanup completed."
+
+          REMOTE
+
+      # 6. Build and transfer backend image.
+      - name: Build and transfer backend
+        if: steps.changes.outputs.backend == 'true'
+        run: |
+          set -euo pipefail
+
+          docker build \
+            -t "file-management-backend:$IMAGE_TAG" \
+            ./BACKEND
+
+          docker save "file-management-backend:$IMAGE_TAG" | gzip -1 | \
+            ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
+            "gunzip | sudo docker load"
+
+      # 7. Deploy backend and verify health.
+      - name: Deploy backend
+        if: steps.changes.outputs.backend == 'true'
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
+            "bash -s -- backend '$IMAGE_TAG'" <<'REMOTE'
+
+          set -uo pipefail
+
+          SERVICE="$1"
+          DEPLOY_TAG="$2"
+
+          REPO="file-management-backend"
+          CONTAINER="file-management-backend-container"
+          TAG_VAR="BACKEND_IMAGE_TAG"
+
+          cd ~/FILE_MANAGEMENT
+
+          ROLLBACK_TAG="rollback-$DEPLOY_TAG"
+          ROLLBACK_IMAGE="$REPO:$ROLLBACK_TAG"
+
+          echo "Getting previous backend image..."
+
+          OLD_IMAGE_ID=$(sudo docker inspect \
+            --format='{{.Image}}' "$CONTAINER")
+
+          if [ -z "$OLD_IMAGE_ID" ]; then
+            echo "Could not find previous backend image."
+            exit 1
+          fi
+
+          sudo docker image tag "$OLD_IMAGE_ID" "$ROLLBACK_IMAGE"
+
+          echo "Deploying backend version: $DEPLOY_TAG"
+
+          if ! sudo env "$TAG_VAR=$DEPLOY_TAG" \
+            docker compose up -d --no-deps "$SERVICE"; then
+            echo "Backend deployment command failed."
+            DEPLOY_FAILED=1
+          else
+            DEPLOY_FAILED=0
+          fi
+
+          wait_for_health() {
+            for i in $(seq 1 36); do
+              STATUS=$(sudo docker inspect \
+                --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || true)
+
+              if [ "$STATUS" = "healthy" ]; then
+                return 0
+              fi
+
+              if [ "$STATUS" = "unhealthy" ]; then
+                return 1
+              fi
+
+              sleep 5
+            done
+
+            return 1
+          }
+
+          if [ "$DEPLOY_FAILED" -eq 0 ]; then
+            if wait_for_health; then
+              echo "Backend deployment successful."
+            else
+              DEPLOY_FAILED=1
+              echo "Backend health check failed."
+            fi
+          fi
+
+          # Restore previous image if deployment failed.
+          if [ "$DEPLOY_FAILED" -eq 1 ]; then
+            echo "Rolling back backend..."
+
+            if sudo env "$TAG_VAR=$ROLLBACK_TAG" \
+              docker compose up -d --no-deps "$SERVICE" &&
+              wait_for_health; then
+
+              echo "Backend rollback successful."
+            else
+              echo "Backend rollback failed. Manual inspection required."
+            fi
+
+            sudo docker logs --tail 100 "$CONTAINER" || true
+            exit 1
+          fi
+
+          # Remove old backend image tags after successful deployment.
+          echo "Cleaning old backend images..."
+
+          while IFS= read -r IMAGE; do
+            case "$IMAGE" in
+              "$REPO:"*)
+                if [ "$IMAGE" != "$REPO:$DEPLOY_TAG" ]; then
+                  sudo docker image rm "$IMAGE" || true
+                fi
+                ;;
+            esac
+          done < <(sudo docker images --format '{{.Repository}}:{{.Tag}}')
+
+          echo "Backend image cleanup completed."
+
+          REMOTE

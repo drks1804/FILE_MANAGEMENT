@@ -1,9 +1,7 @@
 
 services:
   backend:
-    build:
-      context: ./BACKEND
-    image: file-management-backend:latest
+    image: file-management-backend:${BACKEND_IMAGE_TAG:-latest}
     container_name: file-management-backend-container
     env_file:
       - .env
@@ -29,9 +27,7 @@ services:
       start_period: 180s
 
   frontend:
-    build:
-      context: ./FRONTEND/file-management-frontend
-    image: file-management-frontend:latest
+    image: file-management-frontend:${FRONTEND_IMAGE_TAG:-latest}
     container_name: file-management-frontend-container
     ports:
       - "80:80"
@@ -92,3 +88,4 @@ services:
 volumes:
   models_cache:
   mysql_data:
+
