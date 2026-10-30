@@ -22,9 +22,10 @@
             <button
                 class="search-button"
                 type="button"
+                [disabled]="searching"
                 (click)="searchFiles()"
             >
-                Search
+                {{searching ? 'Searching' : 'Search'}}
             </button>
 
         </div>
@@ -59,8 +60,82 @@
 
     </div>
 
+    @if (searching) {
+        <div class="search-status" role="status" aria-live="polite">
+            <span class="spinner"></span>
+            Searching your files
+        </div>
+    }
 
-    <div class="file-table-container" (scroll)="closeActionMenu()">
+
+
+    @if (searchError) {
+
+        <div class="search-error" role="alert">
+
+            <span>Search failed. Please try again.</span>
+
+            <button type="button" class="clear-search" (click)="searchFiles()">
+                Retry
+            </button>
+
+        </div>
+
+    }
+
+    @if (showingContentResults && !searching && !searchError) {
+
+        <div class="search-summary" role="status" aria-live="polite">
+
+            @if (visibleFiles.length > 0) {
+
+                <span>
+                    Found <strong>{{ visibleFiles.length }}</strong>
+                    {{ visibleFiles.length === 1 ? 'file' : 'files' }}
+                    for "{{ lastSearchQuery }}"
+                </span>
+
+            } @else {
+
+                <span>No files found for "{{ lastSearchQuery }}"</span>
+
+            }
+
+        </div>
+
+    }
+
+    @if (filesLoaded && !searching && !searchError && !showingContentResults && visibleFiles.length === 0) {
+
+        <div class="empty-state">
+
+            @if (searchType === 'filename' && searchText.trim() !== '') {
+
+                <p>No files found for "{{ searchText.trim() }}"</p>
+
+            } @else if (showOnlyFavorites) {
+
+                <p><strong>No favorite files yet</strong></p>
+
+                <p>Click the ★ next to a file to add it here.</p>
+
+            } @else {
+
+                <p><strong>No files yet</strong></p>
+
+                <p>Upload your first file to get started.</p>
+
+            }
+
+        </div>
+
+    }
+
+    <div
+        class="file-table-container"
+        [class.is-hidden]="searching || searchError || (filesLoaded && visibleFiles.length === 0)"
+        (scroll)="closeActionMenu()"
+    >
 
         <table class="file-table">
 
@@ -293,7 +368,7 @@
                         <input
                             type="text"
                             readonly
-                            [value]="'http://3.24.94.108/share/' + selectedShareToken"
+                            [value]="'http://13.236.17.94/share/' + selectedShareToken"
                             aria-label="Share link"
                         >
 

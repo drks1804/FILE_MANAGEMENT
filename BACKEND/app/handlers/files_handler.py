@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 import numpy as np
 from fastapi import UploadFile, BackgroundTasks,HTTPException,status, Response
 from sqlalchemy.orm import Session
-from magika import Magika
 from app.database.models import File, Upload,Sharelink,Vector
 from app.service.s3_operations import *
 from app.schema.file_schema import UploadInitRequest
@@ -10,8 +9,6 @@ from app.service.indexing import background_index_file
 from app.service.faiss_index import remove_embeddings
 from app.service.s3_client import s3,BUCKET_NAME
 
-
-m = Magika()
 
 
 def upload_file_handler(
@@ -25,11 +22,10 @@ def upload_file_handler(
             user_id=user_id,
             file_name=upload_data.file_name,
             file_size=upload_data.file_size,
-            file_type="application/octet-stream",
+            file_type=upload_data.file_type,
             is_indexed=False,
             is_favorite=False,
-            updated_at=datetime.now(timezone.utc),
-            folder_id=None
+            updated_at=datetime.now(timezone.utc)
         )
 
         db.add(new_file)
@@ -306,12 +302,6 @@ def complete_upload_handler(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Uploaded file could not be retrieved from S3"
         )
-
-    result = m.identify_bytes(file_bytes)
-
-    detected_file_type = result.output.mime_type
-
-    file_record.file_type = detected_file_type
 
     upload_record.upload_status = "completed"
     upload_record.uploaded_size = file_record.file_size

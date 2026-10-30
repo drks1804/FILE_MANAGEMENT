@@ -2,7 +2,7 @@ from app.service.model import tokenizer
 
 def chunk_text(
         text:str,
-        max_tokens: int = 450,
+        max_tokens: int = 300,
         token_overlap:int=50,
 )->list[str]:
 
@@ -12,33 +12,28 @@ def chunk_text(
     if token_overlap >= max_tokens:
         raise ValueError("token overlap cannot be more than max tokens")
 
-    tokens=tokenizer.encode(
+    offsets=tokenizer.encode(
         text,add_special_tokens=False
-    )
+    ).offsets
+
+    n=len(offsets)
 
     chunks = []
 
     start = 0
 
-    while start < len(tokens):
-        end = start + max_tokens
+    step = max_tokens - token_overlap
 
-        chunk_tokens=tokens[start:end]
+    while start < n:
+        end = min(start + max_tokens,n)
 
-        chunk=tokenizer.decode(
-            chunk_tokens,
-            skip_special_tokens=True
-        ).strip()
+        chunk = text[offsets[start][0]:offsets[end-1][1]].strip()
 
         if chunk:
             chunks.append(chunk)
 
-        start += max_tokens-token_overlap
-    return chunks
+        if end == n:
+            break
 
-
-
-
-
-    
-    
+        start += step
+    return chunks    

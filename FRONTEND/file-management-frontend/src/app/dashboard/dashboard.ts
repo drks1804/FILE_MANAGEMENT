@@ -516,14 +516,18 @@ export class Dashboard implements OnInit {
     });
   }
 
+
   private startNewUpload(
     file: File,
     input: HTMLInputElement = document.createElement('input')
   ): void {
     const uploadData = {
       file_name: file.name,
-      file_size: file.size
+      file_size: file.size,
+      file_type: file.type || 'application/octet-stream'
     };
+
+    console.log('Browser-reported file type:', file.type);
 
     this.http.post<UploadInitResponse>(
       `${environment.apiUrl}/files/upload`,
@@ -544,6 +548,7 @@ export class Dashboard implements OnInit {
       }
     });
   }
+
 
   completeUpload(
     fileId: number,

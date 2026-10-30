@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, ForeignKey
+from sqlalchemy import String, Boolean, ForeignKey,Text
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from sqlalchemy import DateTime
@@ -90,29 +90,6 @@ class File(Base):
         nullable=True
     )
 
-    folder_id:Mapped[int]=mapped_column(
-        ForeignKey("folder.folder_id"),
-        nullable=True
-    )
-
-
-class Chunk(Base):
-    __tablename__ = "chunks"
-
-    chunk_id: Mapped[int] = mapped_column(
-        primary_key=True,
-        autoincrement=True
-    )
-
-    file_id: Mapped[int] = mapped_column(
-        ForeignKey("files.file_id"),
-        nullable=False
-    )
-
-    chunk_index: Mapped[int] = mapped_column(
-        nullable=False
-    )
-
 
 class Vector(Base):
     __tablename__ = "vectors"
@@ -125,6 +102,12 @@ class Vector(Base):
     file_id: Mapped[int] = mapped_column(
         ForeignKey("files.file_id"),
         nullable=False
+    )
+
+    chunk_text: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        default=""
     ) 
 
 class Sharelink(Base):
@@ -178,54 +161,8 @@ class Permission(Base):
         nullable=False
     )
 
-class Accessrequest(Base):
-    __tablename__="accessrequest"
 
-    request_id:Mapped[int]=mapped_column(
-        primary_key=True,
-        autoincrement=True
-    )
 
-    Share_id:Mapped[int]=mapped_column(
-       ForeignKey("sharelink.share_id") 
-    )
-
-    file_id:Mapped[int]=mapped_column(
-        ForeignKey("files.file_id")
-    )
-
-    Email:Mapped[str]=mapped_column(
-        String(255)
-    )
-
-    Requested_at:Mapped[datetime]=mapped_column(
-        DateTime
-    )
-
-    granted_at:Mapped[datetime]=mapped_column(
-        DateTime
-    )
-
-    revoked_at:Mapped[datetime]=mapped_column(
-        DateTime
-    )
-
-class Folder(Base):
-    __tablename__="folder"
-
-    folder_id:Mapped[int]=mapped_column(
-        primary_key=True,
-        autoincrement=True
-    )
-
-    parent_folder_id:Mapped[int | None]=mapped_column(
-        ForeignKey("folder.folder_id"),
-        nullable=True
-    )
-
-    updated_at:Mapped[datetime]=mapped_column(
-        DateTime
-    )
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
