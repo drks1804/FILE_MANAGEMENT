@@ -1,112 +1,169 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import and_,or_
-from app.database.models import File,Vector, Permission, Sharelink
+from sqlalchemy import and_, or_
+from app.database.models import File, Vector, Permission, Sharelink
 from app.service.embedding import search_embeddings
 from app.service.faiss_index import search_index
-
-def search_by_filename_handler(
-    file_name: str,
-    user_id: int,
-    db: Session
-):
-    file = (
-        db.query(File)
-        .filter(
-            File.user_id == user_id,
-            File.file_name == file_name
-        )
-        .first()
-    )
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
-
-    return file
-
-THRESHOLD = 0.50
+from app.service.reranking import rerank_chunks
 
 
 def semantic_search_handler(
     query: str,
     user_id: int,
-    user_email: str,
     db: Session
 ):
-    query_embedding = search_embeddings(query)
-
-    distances, vector_ids = search_index(
-        query_embedding,
-        top_k=5
+    # Step 1: Get only vector IDs belonging to the user's indexed files
+    user_vector_rows = (
+        db.query(Vector.vector_id)
+        .join(File, Vector.file_id == File.file_id)
+        .filter(
+            File.user_id == user_id,
+            File.is_indexed == True
+        )
+        .all()
     )
 
-    print("FAISS distance:", distances[0][0])
-
-    vector_ids = vector_ids[0]
-    distances = distances[0]
-
-    if distances[0] > THRESHOLD:
+    if not user_vector_rows:
         return []
 
-    vector_rows = (
+    user_vector_ids = []
+
+    for row in user_vector_rows:
+        user_vector_ids.append(row[0])
+
+    # Step 2: Generate the query embedding
+    query_embedding = search_embeddings(query)
+
+    # Step 3: Search FAISS for at most 20 allowed vectors
+    top_k = min(20, len(user_vector_ids))
+
+    distances, vector_ids = search_index(
+        query_embedding=query_embedding,
+        allowed_vector_ids=user_vector_ids,
+        top_k=top_k
+    )
+
+    # Step 4: Keep valid candidate vector IDs
+    candidate_vector_ids = []
+
+    for vector_id in vector_ids[0]:
+        if vector_id != -1:
+            candidate_vector_ids.append(int(vector_id))
+
+    if not candidate_vector_ids:
+        return []
+
+    # Step 5: Fetch the candidate vector records from MySQL
+    candidate_vector_rows = (
         db.query(Vector)
+        .join(File, Vector.file_id == File.file_id)
         .filter(
-            Vector.vector_id.in_(vector_ids.tolist())
+            Vector.vector_id.in_(candidate_vector_ids),
+            File.user_id == user_id,
+            File.is_indexed == True
         )
         .all()
     )
 
-    vector_to_file = {}
+    # Step 6: Restore FAISS candidate order
+    vectors_by_id = {}
 
-    for vector in vector_rows:
-        vector_to_file[vector.vector_id] = vector.file_id
+    for vector in candidate_vector_rows:
+        vectors_by_id[vector.vector_id] = vector
 
-    file_ids = []
+    candidate_vectors = []
 
-    for vector_id in vector_ids:
-        file_id = vector_to_file.get(int(vector_id))
+    for vector_id in candidate_vector_ids:
+        vector = vectors_by_id.get(vector_id)
 
-        if file_id is not None and file_id not in file_ids:
-            file_ids.append(file_id)
+        if vector is not None:
+            candidate_vectors.append(vector)
 
-    files = (
+    if not candidate_vectors:
+        return []
+
+    # Step 7: Extract candidate chunk text
+    candidate_chunks = []
+
+    for vector in candidate_vectors:
+        candidate_chunks.append(vector.chunk_text)
+
+    # Step 8: Rerank candidate chunks
+    scores = rerank_chunks(
+        query=query,
+        chunks=candidate_chunks
+    )
+
+    if scores:
+        print(max(scores))
+
+    if len(scores) != len(candidate_vectors):
+        raise ValueError(
+            "Reranker score count does not match candidate count"
+        )
+
+    # Step 9: Pair scores with their corresponding vector records
+    score_threshold = -8.0
+    ranked_vectors = []
+
+    for score , vector in zip(scores, candidate_vectors):
+        if score >= score_threshold:
+            ranked_vectors.append((score,vector))
+
+    ranked_vectors.sort(
+        key=lambda item: item[0],
+        reverse=True
+    )
+
+    # Step 10: Select up to five unique files
+    unique_files = []
+    seen_file_ids = set()
+
+    for score, vector in ranked_vectors:
+        if vector.file_id not in seen_file_ids:
+            seen_file_ids.add(vector.file_id)
+            unique_files.append((score, vector.file_id))
+
+        if len(unique_files) == 5:
+            break
+
+    if not unique_files:
+        return []
+
+    # Step 11: Fetch details for the selected files
+    top_file_ids = []
+
+    for score, file_id in unique_files:
+        top_file_ids.append(file_id)
+
+    top_files = (
         db.query(File)
-        .outerjoin(
-            Sharelink,
-            Sharelink.file_id == File.file_id
-        )
-        .outerjoin(
-            Permission,
-            Permission.share_id == Sharelink.share_id
-        )
         .filter(
-            File.file_id.in_(file_ids),
-            File.is_indexed == True,
-            File.deleted_at.is_(None),
-            or_(
-                File.user_id == user_id,
-                and_(
-                    Permission.email == user_email,
-                    Sharelink.expires_at > datetime.now(timezone.utc)
-                )
-            )
+            File.file_id.in_(top_file_ids),
+            File.user_id == user_id,
+            File.is_indexed == True
         )
         .all()
     )
 
-    file_map = {}
+    # Step 12: Map file IDs to file records
+    files_by_id = {}
 
-    for file in files:
-        file_map[file.file_id] = file
+    for file in top_files:
+        files_by_id[file.file_id] = file
 
-    ordered_files = []
+    # Step 13: Return results in reranker order
+    ranked_files = []
 
-    for file_id in file_ids:
-        if file_id in file_map:
-            ordered_files.append(file_map[file_id])
+    for score, file_id in unique_files:
+        file = files_by_id.get(file_id)
 
-    return ordered_files
+        if file is not None:
+            ranked_files.append({
+                "file_id": file.file_id,
+                "file_name": file.file_name,
+                "score": score
+            })
+
+    return ranked_files

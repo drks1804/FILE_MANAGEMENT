@@ -870,3 +870,64 @@ ANIMATIONS
   color: var(--muted);
   
 }
+
+.search-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  color: #555;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-top-color: #333;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.search-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.is-hidden {
+  display: none;
+}
+
+.search-summary,
+.search-error {
+  display: flex;
+  align-items: center;
+  color: #444;
+  word-break: break-word;
+}
+
+.search-error {
+  color: #b3261e;
+}
+
+.clear-search {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.clear-search:hover {
+  text-decoration: underline;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: #666;
+}

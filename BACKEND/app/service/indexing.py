@@ -27,12 +27,14 @@ def index_file(
     embeddings=generate_embeddings(chunks)
 
     vector_rows=[]
+    vector_ids = np.array([],dtype="int64")
 
     try:
 
-        for embedding in embeddings:
-            new_vector=Vector(
-                file_id=file_id
+        for chunk in chunks:
+            new_vector =Vector(
+                file_id=file_id,
+                chunk_text=chunk
             )
 
             db.add(new_vector)
@@ -63,9 +65,9 @@ def index_file(
         return embeddings
 
     except Exception:
-        if vector_ids.size>0:
+        if len(vector_ids)>0:
             remove_embeddings(
-                vector_ids
+                np.array(vector_ids, dtype="int64")
             )
         db.rollback()
 

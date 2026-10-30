@@ -1,17 +1,25 @@
+# local environments
 venv/
 .venv/
-__pycache__/
+
+# python junk
 **/__pycache__/
-*.py[cod]
+**/*.py[cod]
 .pytest_cache/
 .mypy_cache/
-.git/
-.env
-.env.*
-!.env.example
-Storage/
-storage/
-*.log
 
+# version control
+.git/
+
+# secrets and credentials (never in an image)
+**/.env
+**/.env.*
+!.env.example
 .aws/
 **/.aws/
+
+# local data
+models_cache/
+storage/
+Storage/
+**/*.log

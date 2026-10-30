@@ -1,6 +1,6 @@
 from app.service.model import model
 import numpy as np
-
+import faiss
 
 
 def generate_embeddings(
@@ -10,25 +10,26 @@ def generate_embeddings(
     if not chunks:
         return np.empty((0,384), dtype="float32")
     
-    passages=[]
+    embeddings = list(model.embed(chunks))
 
-    for chunk in chunks:
-        passages.append(f"passage: {chunk}")
-
-    embeddings =model.encode(
-        passages,
-        convert_to_numpy=True
+    embeddings = np.asarray(
+        embeddings,
+        dtype="float32"
     )
 
-    return embeddings.astype("float32")
+    faiss.normalize_L2(embeddings)
+
+    return np.asarray(embeddings,dtype="float32")
 
 def search_embeddings(search_query:str)->np.ndarray:
-    search_query=f"query: {search_query}"
 
-    search_query_embeddings = model.encode(
-        [search_query],
-        convert_to_numpy=True
+    query = (
+        "Represent this sentence for searching relevant passages: "
+        + search_query
     )
 
-    return search_query_embeddings.astype("float32")
+    embeddings = list(
+        model.query_embed([query])
+    )
 
+    return np.asarray(embeddings,dtype="float32")

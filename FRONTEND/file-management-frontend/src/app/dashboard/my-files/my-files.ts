@@ -42,6 +42,9 @@ export class MyFiles implements OnInit {
   searchText = '';
   searchType = 'filename';
   showingContentResults = false;
+  searching = false
+  lastSearchQuery = ''
+  searchError = false
 
   showSharePopup = false;
   selectedFile: File | null = null;
@@ -99,6 +102,10 @@ export class MyFiles implements OnInit {
     this.getFiles();
   }
 
+  get filesLoaded(): boolean {
+    return this.store.loaded;
+  }
+
   get visibleFiles(): File[] {
 
     let result = this.files;
@@ -130,6 +137,8 @@ export class MyFiles implements OnInit {
   onSearchTypeChange(type: string) {
 
     this.searchType = type;
+
+    this.searchError = false
 
     if (type === 'filename' && this.showingContentResults) {
 
@@ -212,6 +221,8 @@ export class MyFiles implements OnInit {
 
         this.showingContentResults = false;
 
+        this.searchError = false
+
         this.cdr.detectChanges();
       },
 
@@ -227,9 +238,11 @@ export class MyFiles implements OnInit {
 
   searchTextChanged() {
 
-    if (this.searchText.trim() === '' && this.showingContentResults) {
+    if (this.searchText.trim() === '' && (this.showingContentResults || this.searchError)) {
 
       this.showingContentResults = false;
+
+      this.searchError =false 
 
       this.getFiles();
 
@@ -247,10 +260,22 @@ export class MyFiles implements OnInit {
 
     if (this.searchText.trim() === '') {
 
+      this.searchError = false
+
       this.getFiles();
 
       return;
     }
+
+    if (this.searching){
+      return
+    }
+    
+    this.searching = true
+
+    this.searchError = false
+
+    this.cdr.detectChanges()
 
     this.http.get<File[]>(
       `${environment.apiUrl}/search/query`,
@@ -265,7 +290,11 @@ export class MyFiles implements OnInit {
 
         this.files = response;
 
+        this.lastSearchQuery = this.searchText.trim()
+
         this.showingContentResults = true;
+
+        this.searching = false
 
         this.cdr.detectChanges();
 
@@ -273,10 +302,11 @@ export class MyFiles implements OnInit {
 
       error: error => {
 
-        this.showMessagePopup(
-          `No matching files found for "${this.searchText}"`,
-          'error'
-        );
+        console.log(error);
+
+        this.searching = false;
+
+        this.searchError = true;
 
         this.cdr.detectChanges();
 
