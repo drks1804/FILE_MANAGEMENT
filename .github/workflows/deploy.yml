@@ -173,6 +173,8 @@ jobs:
           done < <(sudo docker images --format '{{.Repository}}:{{.Tag}}')
 
           echo "Frontend image cleanup completed."
+          echo "Removing unused dangling images..."
+          sudo docker image prune -f
 
           REMOTE
 
@@ -294,5 +296,7 @@ jobs:
           done < <(sudo docker images --format '{{.Repository}}:{{.Tag}}')
 
           echo "Backend image cleanup completed."
+          echo "Removing unused dangling images..."
+          sudo docker image prune -f
 
           REMOTE
