@@ -201,6 +201,17 @@
     color: var(--bad);
 }
 
+.is-hidden {
+  display: none;
+}
+
+.empty-state {
+  margin-top: 150px;
+  text-align: center;
+  padding: 48px 16px;
+  color: #666;
+}
+
 /* =========================
    REVOKE POPUP
 ========================= */

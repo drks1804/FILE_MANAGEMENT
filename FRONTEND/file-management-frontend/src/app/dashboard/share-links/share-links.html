@@ -4,7 +4,17 @@
         <h2>ShareLinks</h2>
     </div>
 
-    <table class="share-table">
+    @if(sharelinks.length===0){
+
+        <div class="empty-state">
+
+            <p><strong>No share links yet</strong></p>
+
+            <p>Share a file from My Files and its link will appear here</p>
+        </div>
+    }
+
+    <table class="share-table" [class.is-hidden]="sharelinks.length===0">
         <thead>
             <tr>
                 <th>Filename</th>
