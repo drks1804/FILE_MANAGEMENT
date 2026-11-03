@@ -41,7 +41,25 @@ jobs:
             backend:
               - 'BACKEND/**'
 
-      # 3. Configure SSH connection to EC2.
+      # 3. Free disk space on the GitHub-hosted runner.
+      - name: Free disk space
+        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.backend == 'true'
+        run: |
+          set -euo pipefail
+
+          echo "Disk space before cleanup:"
+          df -h /
+
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+
+
+          echo "Disk space after cleanup:"
+          df -h /
+
+      # 4. Configure SSH connection to EC2.
       - name: Configure SSH
         if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.backend == 'true'
         env:
@@ -55,7 +73,7 @@ jobs:
 
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      # 4. Build and transfer frontend image.
+      # 5. Build and transfer frontend image.
       - name: Build and transfer frontend
         if: steps.changes.outputs.frontend == 'true'
         run: |
@@ -69,7 +87,7 @@ jobs:
             ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
             "gunzip | sudo docker load"
 
-      # 5. Deploy frontend and verify health.
+      # 6. Deploy frontend and verify health.
       - name: Deploy frontend
         if: steps.changes.outputs.frontend == 'true'
         run: |
@@ -115,7 +133,7 @@ jobs:
           fi
 
           wait_for_health() {
-            for i in $(seq 1 36); do
+            for i in $(seq 1 48); do
               STATUS=$(sudo docker inspect \
                 --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || true)
 
@@ -178,7 +196,7 @@ jobs:
 
           REMOTE
 
-      # 6. Build and transfer backend image.
+      # 7. Build and transfer backend image.
       - name: Build and transfer backend
         if: steps.changes.outputs.backend == 'true'
         run: |
@@ -192,7 +210,7 @@ jobs:
             ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
             "gunzip | sudo docker load"
 
-      # 7. Deploy backend and verify health.
+      # 8. Deploy backend and verify health.
       - name: Deploy backend
         if: steps.changes.outputs.backend == 'true'
         run: |
@@ -238,7 +256,7 @@ jobs:
           fi
 
           wait_for_health() {
-            for i in $(seq 1 36); do
+            for i in $(seq 1 48); do
               STATUS=$(sudo docker inspect \
                 --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || true)
 
