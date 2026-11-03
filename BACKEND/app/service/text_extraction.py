@@ -1,10 +1,14 @@
 from pathlib import Path 
 from pypdf import PdfReader 
 from docx import Document 
+from app.service.image_extraction import generate_image_description
  
 def extract_text(file_path: Path, file_type: str): 
 
     file_path=Path(file_path)
+
+    if file_type.startswith("image/"):
+        return generate_image_description(file_path)
     
     # Check the file type
     if file_type == "application/pdf": 

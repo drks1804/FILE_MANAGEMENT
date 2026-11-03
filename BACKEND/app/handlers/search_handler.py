@@ -89,6 +89,15 @@ def semantic_search_handler(
     for vector in candidate_vectors:
         candidate_chunks.append(vector.chunk_text)
 
+    print("\n========== RERANKING DEBUG ==========")
+    print("SEARCH QUERY:", query)
+
+    for i, chunk in enumerate(candidate_chunks):
+        print(f"\nCHUNK {i + 1}:")
+        print(chunk)
+
+    print("====================================\n")
+
     # Step 8: Rerank candidate chunks
     scores = rerank_chunks(
         query=query,
