@@ -36,6 +36,28 @@ def run_florence(image: Image.Image, task_prompt: str, max_new_tokens: int):
     return result.get(task_prompt, "")
 
 
+def format_region_captions(region_result: dict) -> str:
+    labels = region_result.get("labels", [])
+    bboxes = region_result.get("bboxes", [])
+
+    descriptions = []
+
+    for index, label in enumerate(labels):
+        if index < len(bboxes):
+            bbox = bboxes[index]
+
+            descriptions.append(
+                f"Region {index + 1}: {label}. "
+                f"Location: {bbox}"
+            )
+        else:
+            descriptions.append(
+                f"Region {index + 1}: {label}"
+            )
+
+    return "\n".join(descriptions)
+
+
 def build_structured_description(ocr_text: str) -> str:
     normalized_text = re.sub(r"\s+", " ", ocr_text).lower()
 
@@ -73,26 +95,39 @@ def generate_image_description(file_path: Path) -> str:
     with Image.open(file_path) as image:
         image = image.convert("RGB")
 
-        # Extract text from the image.
+        # 1. Extract text from the image.
         ocr_text = run_florence(
             image=image,
             task_prompt="<OCR>",
             max_new_tokens=512
         )
 
-        # Generate a visual description.
+        # 2. Generate a detailed description of the entire image.
         caption = run_florence(
             image=image,
             task_prompt="<MORE_DETAILED_CAPTION>",
             max_new_tokens=512
         )
 
+        # 3. Generate descriptions of individual image regions.
+        region_result = run_florence(
+            image=image,
+            task_prompt="<DENSE_REGION_CAPTION>",
+            max_new_tokens=512
+        )
+
+    # Format region descriptions.
+    region_descriptions = format_region_captions(region_result)
+
+    # Build structured OCR details.
     structured_description = build_structured_description(ocr_text)
 
+    # Combine all information.
     description = (
         f"Image text:\n{ocr_text}\n\n"
         f"{structured_description}\n\n"
-        f"Image description:\n{caption}"
+        f"Overall image description:\n{caption}\n\n"
+        f"Individual region descriptions:\n{region_descriptions}"
     )
 
     return description.strip()
