@@ -55,7 +55,6 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
 
-
           echo "Disk space after cleanup:"
           df -h /
 
@@ -151,6 +150,28 @@ jobs:
             return 1
           }
 
+          collect_diagnostics() {
+            echo "========================================"
+            echo "CONTAINER STATE"
+            echo "========================================"
+
+            sudo docker inspect "$CONTAINER" \
+              --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}} OOMKilled={{.State.OOMKilled}} Error={{.State.Error}} Health={{if .State.Health}}{{.State.Health.Status}}{{else}}No healthcheck{{end}}' || true
+
+            echo "========================================"
+            echo "FAILED CONTAINER LOGS"
+            echo "========================================"
+
+            sudo docker logs --tail 200 "$CONTAINER" || true
+
+            echo "========================================"
+            echo "HEALTH CHECK HISTORY"
+            echo "========================================"
+
+            sudo docker inspect "$CONTAINER" \
+              --format='{{if .State.Health}}{{range .State.Health.Log}}{{println "Exit code:" .ExitCode "Output:" .Output}}{{end}}{{else}}No health-check information available{{end}}' || true
+          }
+
           if [ "$DEPLOY_FAILED" -eq 0 ]; then
             if wait_for_health; then
               echo "Frontend deployment successful."
@@ -160,8 +181,12 @@ jobs:
             fi
           fi
 
-          # Restore previous image if deployment failed.
+          # Collect diagnostics before rollback.
           if [ "$DEPLOY_FAILED" -eq 1 ]; then
+            echo "Frontend deployment failed. Collecting diagnostics..."
+
+            collect_diagnostics
+
             echo "Rolling back frontend..."
 
             if sudo env "$TAG_VAR=$ROLLBACK_TAG" \
@@ -173,7 +198,6 @@ jobs:
               echo "Frontend rollback failed. Manual inspection required."
             fi
 
-            sudo docker logs --tail 100 "$CONTAINER" || true
             exit 1
           fi
 
@@ -274,6 +298,28 @@ jobs:
             return 1
           }
 
+          collect_diagnostics() {
+            echo "========================================"
+            echo "CONTAINER STATE"
+            echo "========================================"
+
+            sudo docker inspect "$CONTAINER" \
+              --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}} OOMKilled={{.State.OOMKilled}} Error={{.State.Error}} Health={{if .State.Health}}{{.State.Health.Status}}{{else}}No healthcheck{{end}}' || true
+
+            echo "========================================"
+            echo "FAILED CONTAINER LOGS"
+            echo "========================================"
+
+            sudo docker logs --tail 200 "$CONTAINER" || true
+
+            echo "========================================"
+            echo "HEALTH CHECK HISTORY"
+            echo "========================================"
+
+            sudo docker inspect "$CONTAINER" \
+              --format='{{if .State.Health}}{{range .State.Health.Log}}{{println "Exit code:" .ExitCode "Output:" .Output}}{{end}}{{else}}No health-check information available{{end}}' || true
+          }
+
           if [ "$DEPLOY_FAILED" -eq 0 ]; then
             if wait_for_health; then
               echo "Backend deployment successful."
@@ -283,8 +329,12 @@ jobs:
             fi
           fi
 
-          # Restore previous image if deployment failed.
+          # Collect diagnostics before rollback.
           if [ "$DEPLOY_FAILED" -eq 1 ]; then
+            echo "Backend deployment failed. Collecting diagnostics..."
+
+            collect_diagnostics
+
             echo "Rolling back backend..."
 
             if sudo env "$TAG_VAR=$ROLLBACK_TAG" \
@@ -296,7 +346,6 @@ jobs:
               echo "Backend rollback failed. Manual inspection required."
             fi
 
-            sudo docker logs --tail 100 "$CONTAINER" || true
             exit 1
           fi
 
