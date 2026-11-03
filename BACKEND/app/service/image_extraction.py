@@ -83,8 +83,8 @@ def generate_image_description(file_path: Path) -> str:
         # Generate a visual description.
         caption = run_florence(
             image=image,
-            task_prompt="<DETAILED_CAPTION>",
-            max_new_tokens=256
+            task_prompt="<MORE_DETAILED_CAPTION>",
+            max_new_tokens=512
         )
 
     structured_description = build_structured_description(ocr_text)
