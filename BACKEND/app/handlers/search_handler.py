@@ -1,8 +1,5 @@
-from datetime import datetime, timezone
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
-from app.database.models import File, Vector, Permission, Sharelink
+from app.database.models import File, Vector
 from app.service.embedding import search_embeddings
 from app.service.faiss_index import search_index
 from app.service.reranking import rerank_chunks

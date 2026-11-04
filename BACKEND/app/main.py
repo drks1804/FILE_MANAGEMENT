@@ -7,7 +7,7 @@ from app.routes.files import router as files_router
 from app.routes.search import router as search_router
 from app.routes.sharing import router as share_router
 from app.routes.recycle_bin import router as recycle_bin_router
-from app.service.refresh_token_cleanup import delete_expired_refresh_tokens
+from app.service.database_cleanup import delete_expired_refresh_tokens,recycle_bin_cleanup
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,12 +16,23 @@ async def lifespan(app:FastAPI):
     load_index()
 
     delete_expired_refresh_tokens()
+    recycle_bin_cleanup()
     scheduler = BackgroundScheduler()
 
     scheduler.add_job(
         delete_expired_refresh_tokens,
         "interval",
-        hours = 1
+        hours = 1,
+        id="refresh_token_cleanup",
+        max_instances=1
+    )
+
+    scheduler.add_job(
+        recycle_bin_cleanup,
+        "interval",
+        hours = 1,
+        id="recycle_bin_cleanup",
+        max_instances=1
     )
 
     scheduler.start()
