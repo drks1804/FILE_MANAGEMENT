@@ -626,6 +626,12 @@ export class Dashboard implements OnInit {
         sessionStorage.removeItem('prevurl');
 
         this.router.navigate(['/login']);
+      },
+      error: error => {
+        this.showMessagePopup(
+          'Failed to Logout',
+          'error'
+        )
       }
     });
   }

@@ -9,6 +9,7 @@ import { ErrorPage } from './error-page/error-page';
 import { Share } from './share/share';
 import { ShareLinks } from './dashboard/share-links/share-links';
 import { Profile } from './dashboard/profile/profile';
+import { RecycleBin } from './dashboard/recycle-bin/recycle-bin';
 import { authGuard } from './auth/auth-guard';
 
 export const routes: Routes = [
@@ -54,6 +55,10 @@ export const routes: Routes = [
             {
                 path: 'sharelinks',
                 component: ShareLinks
+            },
+            {
+                path: 'recycle-bin',
+                component: RecycleBin
             }
         ]
     },

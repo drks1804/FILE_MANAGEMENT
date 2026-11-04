@@ -1,0 +1,269 @@
+<div class="recycle-bin-page">
+
+    <div class="page-head">
+        <h2>Recycle Bin</h2>
+    </div>
+
+    <div class="info-banner">
+        Files in the Recycle Bin are kept for 30 days, then deleted automatically.
+    </div>
+
+    @if (recycleBinFiles.length === 0) {
+
+        <div class="empty-state">
+
+            <p><strong>No files in Recycle Bin</strong></p>
+
+            <p>Deleted files will appear here.</p>
+
+        </div>
+
+    }
+    @else {
+
+        <div
+            class="file-table-container"
+            (scroll)="closeActionMenu()"
+        >
+
+            <table class="file-table"  [class.is-hidden]="recycleBinFiles.length===0">
+
+                <thead>
+
+                    <tr>
+                        <th>Filename</th>
+                        <th>Filesize</th>
+                        <th>Deleted At</th>
+                        <th>Days Left</th>
+                        <th>Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @for (file of recycleBinFiles; track file.file_id) {
+
+                        @let fileType = getFileTypeInfo(file.file_type);
+                        @let daysLeft = getDaysLeft(file.deleted_at);
+
+                        <tr>
+
+                            <td
+                                class="file-name"
+                                (click)="ViewFile(file)"
+                            >
+
+                                <div class="file-name-cell">
+
+                                    <span
+                                        class="file-type-badge"
+                                        [ngClass]="fileType.class"
+                                    >
+                                        {{ fileType.label }}
+                                    </span>
+
+                                    <span>
+                                        {{ file.file_name }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                {{ formatFileSize(file.file_size) }}
+                            </td>
+
+                            <td>
+                                {{ file.deleted_at | date:'dd-MM-yyyy' }}
+                            </td>
+
+                            <td>
+
+                                @if (daysLeft > 5) {
+
+                                    <span class="days-left">
+                                        {{ daysLeft }}
+                                        {{ daysLeft === 1 ? 'day' : 'days' }}
+                                    </span>
+
+                                }
+                                @else {
+
+                                    <span class="days-left warning">
+                                        {{ daysLeft }}
+                                        {{ daysLeft === 1 ? 'day' : 'days' }}
+                                    </span>
+
+                                }
+
+                            </td>
+
+                            <td class="actions">
+
+                                <button
+                                    type="button"
+                                    class="action-button"
+                                    aria-haspopup="menu"
+                                    [attr.aria-expanded]="openMenuId === file.file_id"
+                                    [attr.aria-label]="'Actions for ' + file.file_name"
+                                    (click)="toggleActionMenu($event, file)"
+                                >
+                                    ⋮
+                                </button>
+
+                                @if (openMenuId === file.file_id) {
+
+                                    <div
+                                        class="action-menu"
+                                        role="menu"
+                                        [style.top.px]="menuTop"
+                                        [style.left.px]="menuLeft"
+                                        (click)="$event.stopPropagation()"
+                                    >
+
+                                        <button
+                                            type="button"
+                                            role="menuitem"
+                                            (click)="runRecycleBinAction('restore', file)"
+                                        >
+                                            Restore
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            role="menuitem"
+                                            class="danger"
+                                            (click)="runRecycleBinAction('permanent-delete', file)"
+                                        >
+                                            Delete Permanently
+                                        </button>
+
+                                    </div>
+
+                                }
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    }
+
+</div>
+
+
+<!-- RESTORE CONFIRMATION POPUP -->
+
+@if (showRestorePopup) {
+
+    <div class="confirm-overlay">
+
+        <div class="confirm-popup">
+
+            <h2>Restore File</h2>
+
+            <p>
+                Restore
+                <strong>{{ selectedRestoreFile?.file_name }}</strong>?
+                It will no longer count toward its 30-day
+                Recycle Bin window.
+            </p>
+
+            <div class="confirm-buttons">
+
+                <button
+                    type="button"
+                    class="confirm-restore-button"
+                    (click)="restoreFile()"
+                >
+                    Restore
+                </button>
+
+                <button
+                    type="button"
+                    class="cancel-button"
+                    (click)="closeRestorePopup()"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+}
+
+
+<!-- PERMANENT DELETE CONFIRMATION POPUP -->
+
+@if (showPermanentDeletePopup) {
+
+    <div class="confirm-overlay">
+
+        <div class="confirm-popup">
+
+            <h2>Delete Permanently</h2>
+
+            <p>
+                <strong>{{ selectedDeleteFile?.file_name }}</strong>
+                will be permanently deleted. This action cannot be undone.
+            </p>
+
+            <div class="confirm-buttons">
+
+                <button
+                    type="button"
+                    class="confirm-delete-button"
+                    (click)="permanentlyDeleteFile()"
+                >
+                    Delete Permanently
+                </button>
+
+                <button
+                    type="button"
+                    class="cancel-button"
+                    (click)="closePermanentDeletePopup()"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+}
+
+
+<!-- SUCCESS / ERROR MESSAGE POPUP -->
+
+@if (showMessage) {
+
+    <div class="message-overlay">
+
+        <div
+            class="message-popup"
+            [class.error]="messageType === 'error'"
+        >
+
+            <p>
+                {{ message }}
+            </p>
+
+        </div>
+
+    </div>
+
+}

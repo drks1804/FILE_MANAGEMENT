@@ -308,8 +308,9 @@
             <h2>Delete File</h2>
 
             <p>
-                Are you sure you want to delete
+                Are you sure you want move
                 <strong>{{selectedDeleteFile?.file_name}}</strong>
+                to Recycle Bin
             </p>
 
             <div class="delete-buttons">
@@ -319,7 +320,7 @@
                     class="confirm-delete-button"
                     (click)="deleteFile()"
                 >
-                    Delete
+                    Move To Recycle Bin
                 </button>
 
                 <button

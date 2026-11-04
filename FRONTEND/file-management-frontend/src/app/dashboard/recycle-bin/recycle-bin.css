@@ -1,0 +1,515 @@
+.recycle-bin-page {
+    height: 100%;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    overflow: hidden;
+}
+
+.page-head h2 {
+    margin: 0;
+    color: var(--fg);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* =========================
+INFO BANNER
+========================= */
+
+.info-banner {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* =========================
+FILE TYPE BADGE
+========================= */
+
+.file-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-type-badge {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: white;
+    text-transform: uppercase;
+}
+
+.file-type-badge.type-pdf {
+    background: #b91c1c;
+}
+
+.file-type-badge.type-doc {
+    background: #2563eb;
+}
+
+.file-type-badge.type-sheet {
+    background: #15803d;
+}
+
+.file-type-badge.type-slide {
+    background: #c2410c;
+}
+
+.file-type-badge.type-txt {
+    background: #334155;
+}
+
+.file-type-badge.type-image {
+    background: #7c3aed;
+}
+
+.file-type-badge.type-archive {
+    background: #a16207;
+}
+
+.file-type-badge.type-default {
+    background: var(--soft);
+    color: var(--muted);
+}
+
+.file-type-badge.type-code {
+    background: #0e7490;
+}
+
+.file-type-badge.type-exe {
+    background: #991b1b;
+}
+
+/* =========================
+FILE TABLE
+========================= */
+
+.file-table-container {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.file-table-container::-webkit-scrollbar {
+    display: none;
+}
+
+.file-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.file-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.file-table thead th {
+    height: 50px;
+    box-sizing: border-box;
+    background: var(--soft);
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+.file-table th,
+.file-table td {
+    padding: 16px;
+    text-align: center;
+}
+
+.file-table tbody td {
+    color: var(--fg);
+    font-size: 14px;
+    border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+}
+
+.file-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.file-table tbody tr:hover td {
+    background: var(--hover);
+}
+
+/* column widths */
+
+.file-table th:nth-child(1),
+.file-table td:nth-child(1) {
+    width: 40%;
+    text-align: left;
+}
+
+.file-table th:nth-child(2),
+.file-table td:nth-child(2) {
+    width: 15%;
+}
+
+.file-table th:nth-child(3),
+.file-table td:nth-child(3) {
+    width: 20%;
+}
+
+.file-table th:nth-child(4),
+.file-table td:nth-child(4) {
+    width: 12%;
+}
+
+.file-table th:nth-child(5),
+.file-table td:nth-child(5) {
+    width: 13%;
+}
+
+/* file name */
+
+.file-name span {
+    color: var(--fg);
+    overflow-wrap: anywhere;
+}
+
+.file-name span:hover {
+    color: var(--link);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* =========================
+DAYS LEFT
+========================= */
+
+.days-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--ok-bg);
+    color: var(--ok);
+}
+
+.days-left::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.days-left.warning {
+    background: var(--bad-bg);
+    color: var(--bad);
+}
+
+/* =========================
+ACTIONS MENU
+========================= */
+
+.actions {
+    text-align: center;
+}
+
+.action-button {
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+}
+
+.action-button:hover,
+.action-button[aria-expanded="true"] {
+    background: var(--soft);
+    color: var(--fg);
+}
+
+.action-menu {
+    position: fixed;
+    z-index: 20;
+    width: 160px;
+    padding: 6px;
+    box-sizing: border-box;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+    animation: menuFade 0.12s ease;
+}
+
+.action-menu button {
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+.action-menu button:hover,
+.action-menu button:focus-visible {
+    background: var(--soft);
+    outline: none;
+}
+
+.action-menu button.danger {
+    color: var(--bad);
+}
+
+.action-menu button.danger:hover,
+.action-menu button.danger:focus-visible {
+    background: var(--bad-bg);
+}
+
+/* =========================
+CONFIRM POPUPS
+========================= */
+
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 3, 8, 0.65);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3;
+}
+
+.confirm-popup {
+    width: 440px;
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    background: var(--panel);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+    animation: popupFade 0.3s ease;
+}
+
+.confirm-popup h2 {
+    margin: 0 0 6px;
+    color: var(--fg);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.confirm-popup p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.confirm-popup strong {
+    color: var(--fg);
+    font-weight: 600;
+}
+
+.confirm-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.confirm-restore-button {
+    min-width: 120px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.confirm-restore-button:hover {
+    filter: brightness(1.1);
+}
+
+.confirm-delete-button {
+    min-width: 150px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--bad);
+    color: var(--accent-fg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.confirm-delete-button:hover {
+    filter: brightness(1.1);
+}
+
+.cancel-button {
+    min-width: 120px;
+    padding: 10px 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--fg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.cancel-button:hover {
+    background: var(--soft);
+}
+
+/* keyboard focus */
+
+.file-table button:focus-visible,
+.confirm-popup button:focus-visible,
+.action-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* =========================
+MESSAGE TOAST
+========================= */
+
+.message-overlay {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 1100;
+    pointer-events: none;
+}
+
+.message-popup {
+    width: 450px;
+    max-width: calc(100% - 32px);
+    background-color: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    animation: messageFade 0.25s ease;
+}
+
+.message-popup p {
+    color: var(--ok);
+    text-align: center;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.message-popup.error {
+    border-color: var(--bad);
+}
+
+.message-popup.error p {
+    color: var(--bad);
+}
+
+/* =========================
+EMPTY STATE
+========================= */
+
+.empty-state {
+  margin-top: 110px;
+  text-align: center;
+  padding: 48px 16px;
+  color: #666;
+}
+
+/* =========================
+ANIMATIONS
+========================= */
+
+@keyframes popupFade {
+    from {
+        opacity: 0;
+        transform: translateY(-15px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes messageFade {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes menuFade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

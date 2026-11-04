@@ -6,6 +6,7 @@ from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
 from app.routes.search import router as search_router
 from app.routes.sharing import router as share_router
+from app.routes.recycle_bin import router as recycle_bin_router
 from app.service.refresh_token_cleanup import delete_expired_refresh_tokens
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,3 +52,4 @@ app.include_router(auth_router)
 app.include_router(files_router)
 app.include_router(search_router)
 app.include_router(share_router)
+app.include_router(recycle_bin_router)

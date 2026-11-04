@@ -8,6 +8,12 @@ from datetime import timedelta,timezone
 from app.schema.auth_schema import ForgotPasswordRequest, LoginResponse, PasswordResetResponse, RegisterRequest, RegisterResponse, LoginRequest, ResetPasswordRequest,ProfileResponse,ProfileUpdate
 from app.handlers.auth_handler import register_user,login_user,forgot_password_user,reset_password_user,validate_reset_token,get_profile_handler,update_profile_handler
 from app.service.utils import utc_now
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+COOKIE_PATH = os.getenv("COOKIE_PATH", "/auth")
 
 router = APIRouter(
     prefix="/auth",
@@ -60,7 +66,7 @@ def login(
         secure=False, 
         samesite="lax",
         max_age=7 * 24 * 60 * 60,
-        path = "/api/auth"
+        path = COOKIE_PATH
     )
 
     return LoginResponse(
@@ -176,7 +182,7 @@ def refresh(
             secure=False,
             samesite="lax",
             max_age=7 * 24 * 60 * 60,
-            path="/api/auth"
+            path=COOKIE_PATH
         )
 
         return {
@@ -210,7 +216,7 @@ def logout(
         if not refresh_token:
             response.delete_cookie(
                 key="refresh_token",
-                path="/api/auth"
+                path=COOKIE_PATH
             )
 
             return {
@@ -237,7 +243,7 @@ def logout(
 
         response.delete_cookie(
             key="refresh_token",
-            path="/api/auth"
+            path=COOKIE_PATH
         )
 
         return {

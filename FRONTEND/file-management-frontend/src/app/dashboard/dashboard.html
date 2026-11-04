@@ -50,6 +50,15 @@
             </button>
 
             <button
+                class="sidebar-button"
+                routerLink="/dashboard/recycle-bin"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+            >
+                Recycle Bin
+            </button>
+
+            <button
                 class="sidebar-button profile-button"
                 (click)="openProfile()"
                 routerLinkActive="active"

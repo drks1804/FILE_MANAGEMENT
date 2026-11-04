@@ -450,6 +450,8 @@ export class MyFiles implements OnInit {
 
   ViewFile(file: File) {
 
+    const filename = file.file_name;
+
     this.http.get(
       `${environment.apiUrl}/files/${file.file_id}/view`,
       {
@@ -466,6 +468,8 @@ export class MyFiles implements OnInit {
       },
 
       error: error => {
+
+        this.showMessagePopup(`Failed to Open ${filename}`,'error')
 
         console.log(error);
 
@@ -718,7 +722,7 @@ export class MyFiles implements OnInit {
         this.closeDeletePopup();
 
         this.showMessagePopup(
-          `Successfully Deleted ${filename}`
+          `Moved ${filename} to Recycle Bin`
         );
 
       },
@@ -728,7 +732,7 @@ export class MyFiles implements OnInit {
         this.closeDeletePopup();
 
         this.showMessagePopup(
-          `Failed to delete ${filename}`,
+          `Failed to move ${filename} to Recycle Bin`,
           'error'
         );
 
