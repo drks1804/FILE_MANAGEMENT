@@ -19,7 +19,8 @@ def semantic_search_handler(
         .join(File, Vector.file_id == File.file_id)
         .filter(
             File.user_id == user_id,
-            File.is_indexed == True
+            File.is_indexed.is_(True),
+            File.deleted_at.is_(None)
         )
         .all()
     )
