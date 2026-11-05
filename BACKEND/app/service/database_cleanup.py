@@ -38,7 +38,6 @@ def recycle_bin_cleanup():
         expired_files = (
             db.query(File)
             .filter(
-                File.is_deleted == True,
                 File.deleted_at.is_not(None),
                 File.deleted_at <= expire_time
             )

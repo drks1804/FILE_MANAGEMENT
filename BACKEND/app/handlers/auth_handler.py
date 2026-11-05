@@ -13,6 +13,10 @@ from app.service.utils import utc_now
 
 load_dotenv()
 
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_COUNTER_TTL = 900
+LOGIN_LOCK_TTL = 900
+
 
 def register_user(request: RegisterRequest, db: Session):
 
@@ -49,8 +53,67 @@ def register_user(request: RegisterRequest, db: Session):
 
     return new_user
 
+
+FAILED_LOGIN_SCRIPT = """
+local locked = redis.call('EXISTS', KEYS[2])
+
+if locked == 1 then
+    return -1
+end
+
+local count = redis.call('INCR', KEYS[1])
+
+redis.call('EXPIRE', KEYS[1], ARGV[1])
+
+if count >= tonumber(ARGV[2]) then
+    redis.call('DEL', KEYS[1])
+    redis.call('SET', KEYS[2], '1', 'EX', ARGV[3])
+    return -2
+end
+
+return count
+"""
+
+
+def record_failed_login(email: str):
+
+    normalized_email = email.strip().lower()
+
+    count_key = f"login:{normalized_email}:count"
+    locked_key = f"login:{normalized_email}:locked"
+
+    result = redis_client.eval(
+        FAILED_LOGIN_SCRIPT,
+        2,
+        count_key,
+        locked_key,
+        LOGIN_COUNTER_TTL,
+        MAX_LOGIN_ATTEMPTS,
+        LOGIN_LOCK_TTL
+    )
+
+    return result
+
+
+
 def login_user(request: LoginRequest, db: Session):
 
+    normalized_email = request.email.strip().lower()
+
+    count_key = f"login:{normalized_email}:count"
+    locked_key = f"login:{normalized_email}:locked"
+
+    # Step 1: Check whether the email is locked
+    remaining_ttl = redis_client.ttl(locked_key)
+
+    if remaining_ttl > 0:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many incorrect attempts. Please wait before trying again.",
+            headers={"Retry-After": str(remaining_ttl)}
+        )
+
+    # Step 2: Find the user
     existing_user = (
         db.query(User)
         .filter(User.email == request.email)
@@ -63,27 +126,43 @@ def login_user(request: LoginRequest, db: Session):
             detail="User not found Register before Login"
         )
 
+    # Step 3: Verify password
     if not verify_password(
         request.password,
         existing_user.password_hashed
     ):
+        result = record_failed_login(normalized_email)
+
+        if result == -1 or result == -2:
+            remaining_ttl = redis_client.ttl(locked_key)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many incorrect attempts. Account locked for 15 minutes.",
+                headers={"Retry-After": str(remaining_ttl)}
+            )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect Password"
         )
 
+    # Step 4: Correct password - clear failed attempts
+    redis_client.delete(count_key)
+
+    # Step 5: Generate access token
     access_token = create_access_token(
         user_id=existing_user.user_id,
         email=existing_user.email
     )
 
-    refresh_token , token_hash = create_refresh_tokens()
+    # Step 6: Generate refresh token
+    refresh_token, token_hash = create_refresh_tokens()
 
     new_refresh_token = RefreshToken(
         user_id=existing_user.user_id,
         token_hash=token_hash,
-        expires_at = utc_now() + timedelta(days=7),
-        created_at = utc_now()
+        expires_at=utc_now() + timedelta(days=7),
+        created_at=utc_now()
     )
 
     db.add(new_refresh_token)

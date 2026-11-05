@@ -14,32 +14,62 @@
                     placeholder="Enter email"
                     autocomplete="username"
                     [(ngModel)]="email"
+                    (ngModelChange)="onFormChange()"
                 />
             </div>
 
             <div class="field">
                 <label for="password">Password</label>
-                <input
-                    #passwordInput
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    autocomplete="current-password"
-                    [(ngModel)]="password"
-                />
-                
+
+                <div class="input-wrap">
+
+                    <input
+                        #passwordInput
+                        [type]="showPassword ? 'text' : 'password'"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        [(ngModel)]="password"
+                        (ngModelChange)="onFormChange()"
+                    />
+
+                    <button
+                        type="button"
+                        class="eye"
+                        [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                        (click)="togglePasswordVisibility()"
+                    >
+                        {{ showPassword ? 'Hide' : 'Show' }}
+                    </button>
+
+                </div>
+
             </div>
 
-            <button type="submit" class="submit" [disabled]="loading">
-                {{ loading ? 'Logging in...' : 'Login' }}
+            <button
+                type="submit"
+                class="submit"
+                [disabled]="loading"
+            >
+                    {{ loading ? 'Logging in...' : 'Login' }}
             </button>
         </form>
 
         @if (message) {
-            <p class="message" [class.error]="messageType === 'error'" [class.success]="messageType === 'success'">
-                {{ message }}
-            </p>
+            <div
+                class="message"
+                [class.error]="messageType === 'error'"
+                [class.success]="messageType === 'success'"
+            >
+                <p>{{ message }}</p>
+
+                @if (remainingSeconds > 0) {
+                    <h2 class="countdown">
+                        {{ formatTime(remainingSeconds) }}
+                    </h2>
+                }
+            </div>
         }
 
         <div class="links">

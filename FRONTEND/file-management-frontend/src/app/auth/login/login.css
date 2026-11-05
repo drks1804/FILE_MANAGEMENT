@@ -125,6 +125,12 @@ a:focus-visible {
     color: var(--ok);
 }
 
+.message .countdown {
+    margin: 8px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
 .links {
     margin-top: 20px;
     display: flex;
